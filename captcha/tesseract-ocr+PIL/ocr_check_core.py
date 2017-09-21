@@ -193,6 +193,7 @@ class Captcha(object):
         """
         self.img = Image.open(name)
         img_list = self.graying(self.img)
+        img_list = map(self.map_rows_to_Y_captcha, img_list)
         _char_list = filter(lambda x: x, map(self.binarization1, img_list))
         all_captch_download(self.img, ''.join(_char_list))
         if len(_char_list) != 4:
@@ -245,18 +246,42 @@ class Captcha(object):
             _tmp = False
         return _split_list
 
-    # def caculate_X(im):
-    #     Image_Value=[]
-    #     for i in range(im.size[0]):
-    #         Y_pixel=0
-    #         for j in range(im.size[1]):
-    #             if im.getpixel((i,j))==0:
-    #                 temp_value=1
-    #             else:
-    #                 temp_value=0
-    #             Y_pixel = Y_pixel temp_value
-    #         Image_Value.append(Y_pixel)
-    #     return Image_Value
+    def map_rows_to_Y_captcha(self, im):
+        '''映射到y轴
+        '''
+        up = 0
+        down = int(im.size[1])-1
+
+        _black_flag = 0
+        _tmp = 0
+        _y_pixel = []
+        for h in xrange(0, im.size[1]):
+            for w in xrange(1, im.size[0]):
+                if im.getpixel((w, h)) == self._black:
+                    _tmp = 1
+
+            if _tmp:
+                _y_pixel.append(h)
+            _tmp = 0
+
+        _tmp2 = 0
+        list_i = []
+        for i, v in enumerate(_y_pixel):
+            _ = v-i
+            if _ != _tmp2:
+                _tmp2 = _
+                list_i.append(i)
+            if i == len(_y_pixel)-1:
+                list_i.append(i)
+
+        for i in xrange(len(list_i)-1):
+            if (list_i[i+1] - list_i[i]) < 3:
+                for h in xrange(list_i[i], list_i[i+1]):
+                    for w in xrange(im.size[0]):
+                        # print [w, _y_pixel[h]]
+                        im.putpixel([w, _y_pixel[h]], self._white)
+        return im
+
 
 def test():
     c = Captcha()
