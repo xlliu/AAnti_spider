@@ -24,6 +24,14 @@ Descript:
     5. 删除空白图片
     6. 识别图片
 
+测试需要文件夹目录(开启图片保存功能需确认文件夹存在)：
+./test_captcha              素材图片
+./test_captcha2             整理好的文件名为图片内容的素材图片(用于测试准确率)
+./test_captcha_all          已识别并保存所有图片
+./test_captcha_errer        已识别并保存的❌图片
+./test_captcha_success      已识别并保存的✅图片
+./test_captcha_split        已识别并保存的切割好的char图片
+
 '''
 
 # 0 不开启图片保存 1 开启图片保存
@@ -44,6 +52,8 @@ class Captcha(object):
             self.counts = 0
             self.success_counts = 0
             self.errer_counts = 0
+        if OPEN_SAVE:
+            self.is_dir = 0
         self._white = (255, 255, 255)
         self._black = (0, 0, 0)
         pass
@@ -279,6 +289,22 @@ class Captcha(object):
             _ = str(uuid.uuid4())[:4]
             _img.save('./test_captcha_{}/{}_{}.png'.format(path, char, _))
 
+    def _debug_check_dir(self):
+        if not self.is_dir:
+            _test_dir = [
+                './test_captcha',              # 素材图片
+                './test_captcha2',            # 整理好的文件名为图片内容的素材图片(用于测试准确率)
+                './test_captcha_all',          # 已识别并保存所有图片
+                './test_captcha_errer',        # 已识别并保存的❌图片
+                './test_captcha_success',      # 已识别并保存的✅图片
+                './test_captcha_split',        # 已识别并保存的切割好的char图片
+            ]
+            for _dir in _test_dir:
+                if not os.path.exists(_dir):
+                    os.mkdir(_dir)
+            self.is_dir = 1
+
+
     def _debug_counts(self, name, _char_list):
         '''
         统计识别正确率， 调试使用
@@ -293,7 +319,8 @@ class Captcha(object):
         
         if OPEN_COUNTS:
             self.counts += 1
-            print '正确为: {}, 识别为: {}'.format(name[-8:-4], ''.join(_char_list).lower())
+            lower_char = ''.join(_char_list).lower()
+            print '正确为: {}, 识别为: {}'.format(name[-8:-4], lower_char)
             if ''.join(_char_list).lower() == name[-8:-4]:
                 self.success_counts += 1
                 if OPEN_SAVE:
@@ -305,7 +332,8 @@ class Captcha(object):
                 if OPEN_SAVE:
                     self._debug_captch_save(
                         self.img, 'errer', ''.join(_char_list))
-            print u'总识别数量: {},      ✅  : {}, ❌ : {},     成功率: {}%'.format(self.counts, self.success_counts, self.errer_counts, self.success_counts * 100.0 / float(self.counts))
+            print u'总识别数量: {},      ✅  : {}, ❌ : {},     成功率: {}%'.format(self.counts, 
+                self.success_counts, self.errer_counts, self.success_counts * 100.0 / float(self.counts))
             if OPEN_SAVE:
                 self._debug_captch_save(self.img, 'all', ''.join(_char_list))
 
